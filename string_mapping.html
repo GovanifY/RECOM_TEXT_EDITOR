@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8"/>
+	<title>GovanifY</title>
+	<meta name="viewport" content="width=device-width"/>
+	<link rel="icon" type="image/png" href="../favicon.png"/>
+	<link rel="stylesheet" href="..//_res/normalize.min.css"/>
+	<link rel="stylesheet" href="..//_res/main.css"/>
+	<!--[if lt IE 9]><script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7/html5shiv.min.js"></script><![endif]-->
+	<script src="../_res/global.js"></script>
+<style type="text/css">
+h1 small{font-size:.4em;vertical-align:middle;}
+div{text-align:center;margin-bottom:1em;}
+label,select,input[data-opt]{margin-right:2em;}
+table{border-collapse:collapse;display:inline-block;margin-right:2em;vertical-align:top;}td:not([colspan]){border:1px solid #FFF;height:1em;min-width:1em;}
+textarea{display:block;margin:1em auto;width:80%;min-height:8em;white-space:nowrap;overflow:auto;}
+</style>
+<script src="res/string_mapping.min.js"></script>
+</head><body>
+<!-- Header -->
+	<h1 class="tplpath"><span id="tplpagename">String Mapping</span> <small>[Copyright © 2015 GovanifY]</small></h1>
+<!-- Main content -->
+<div><span id="sts">Failed to load...</span><span id="chrSts" style="margin-left:1.5em;"></span></div>
+<script>
+(function(){'use strict';
+	document.title='KH String Mapper v2.90a'+(typeof arrTypesVER!=='undefined'?arrTypesVER:'?')+' - '+document.title;
+	if(typeof arrTypes==='undefined'||!arrTypes.ಠ_ಠ){document.getElementById('sts').textContent='Failed to load character mappings! [T='+(typeof arrTypes==='undefined')+']';return;}
+	var charArray=arrTypes[arrTypes.ಠ_ಠ],charArrayR={},
+		tbT,tbB,status=document.getElementById('sts'),charStatus=document.getElementById('chrSts'),auto=true,
+		loadR=function(o,t){
+			for(var i in o){if(isNaN(i)){continue;}
+				if(o[i|=0] instanceof Array){
+					if(o[i].length>1&&o[i][1]!==false){charArrayR[o[i][1]]=(t||'')+('0'+(i.toString('16'))).slice(-2);}else{continue;}
+				}else if(typeof o[i]==='object'){
+					loadR(o[i],(t||'')+('0'+i.toString('16')).slice(-2)+' ');
+				}else{
+					charArrayR[o[i]]=(t||'')+('0'+(i.toString('16'))).slice(-2);
+				}
+			}
+		},
+		_makeTblIns=function(v){var s,r;
+			if(typeof tbT.selectionStart==="number"&&typeof tbT.selectionEnd==="number"){
+				r=tbT.selectionStart!==tbT.selectionEnd;
+				tbT.value=tbT.value.slice(0,s=tbT.selectionStart)+v+tbT.value.slice(tbT.selectionEnd);
+				tbT.selectionEnd=s+v.length;tbT.selectionStart=r?s:tbT.selectionEnd;
+			}else if(document.selection&&document.selection.createRange){/*IE*/
+				r=document.selection.createRange(),t=tR.createTextRange(),p=tR.createTextRange(),e;t.moveToBookmark(r.getBookmark());p.setEndPoint("EndToStart",t);e=(s=p.text.length)+r.text.length;tR.value=tR.value.slice(0,s++)+v+tR.value.slice(e);
+				t=tR.createTextRange();t.collapse(true);t.move("character",s-(tR.value.slice(0, s).split("\r\n").length-v.length));t.select();
+			}
+			if(auto){tbT.focus();parse();}
+		},
+		_makeTblClk=function(){_makeTblIns(this.title||this.value);},
+		_makeTbl=function(o,a,p){
+			var t=document.createElement('table'),r,d,s,i=0,l=typeof o.limit==='number'?o.limit:256;a.push(t);
+			r=document.createElement('tr');t.appendChild(r);r=r.appendChild(document.createElement('th'));r.colSpan=16;r.innerHTML=(p?p+' Characters':'Main')+(typeof o.note==='string'?' '+o.note:'');
+			mklp:for(;i<l;i++){
+				if(i%16===0){r=document.createElement('tr');t.appendChild(r);}//21=kanji,14=sys
+				d=document.createElement('td');d.title=p+'0x'+('0'+i.toString('16').toUpperCase()).slice(-2);r.appendChild(d);
+				if(typeof o[i]==='undefined'){
+					continue;
+				}else if(o[i] instanceof Array){
+					s=document.createElement('input');
+					switch(o[i][0]){
+						case 0:s.type='image';s.alt=s.title=o[i][1];s.src=o[i][2];if(o[i].length>3){s.style.cssText=o[i][3];}s.addEventListener('click',_makeTblClk,false);break;
+						case 1:s.type='button';s.value=o[i][2];s.addEventListener('click',(function(f,c){var r=f();if(typeof r==='string'&&r.length>5){_makeTblIns('{0x'+('0'+c.toString(16).toUpperCase()).slice(-2)+'}'+r);}}).bind(undefined,o[i][3],i),false);break;
+						case 2:s.type='button';s.title=o[i][1];s.value=o[i][2];s.addEventListener('click',_makeTblClk,false);break;
+						default:console.log('Unknown Type: '+o[i][0]+'!');continue mklp;
+					}
+				}else if(typeof o[i]==='object'){
+					_makeTbl(o[i],a,d.title+' ');
+					s=document.createTextNode('EFC');d.title+='\nExtended Font Character';
+				}else{//string
+					s=document.createElement('input');s.type='button';s.value=o[i];s.addEventListener('click',_makeTblClk,false);
+				}
+				d.appendChild(s);
+			}
+			if((l=i%16)!==0){d=document.createElement('td');d.colSpan=16-l;r.appendChild(d);}
+		},
+		makeTbl=function(){loadR(charArray);
+			var a=[],r=document.getElementsByTagName('table'),i=r.length
+			while(--i>=0){r[i].parentNode.removeChild(r[i]);}
+			_makeTbl(charArray,a,'');
+			for(i=0;i<a.length;i++){document.body.appendChild(a[i]);}
+		},
+		parse=function(){
+			var h=tbT.value,s=h.split('\n'),sl=s.length,t,tl,b,g='',p=false;
+			while(sl-->0){
+				if(!(t=s.splice(0,1)[0])){continue;}tl=(t=t.split('')).length;
+				while(tl-->0){
+					if(!(b=t.splice(0,1)[0])){continue;}
+					if(typeof p==='string'){
+						if(b==='}'){
+							b=p+'}';p=false;
+						}else{
+							p+=b;continue;
+						}
+					}else if(b==='{'){
+						p='{';continue;
+					}
+					if(typeof charArrayR[b]==='string'){
+						g+=charArrayR[b].toUpperCase()+(tl===0?'':' ');
+					}else{
+						if(b.length>2&&b.search(/^\{0x([0-9A-F]{1,2})\}$/i)!==-1){
+							g+=('0'+RegExp.$1.toUpperCase()).slice(-2)+(tl===0?'':' ');
+						}else{
+							if(b!=='}'){h=h.replace(new RegExp(b.replace(/[-\/\\^$*+?.()|[\]{}]/g,'\\$&'),'g'),'');}
+							else{/*Not much I can do, at this point...*/}
+							status.textContent='Unsupported character: "'+b+'"';
+						}
+					}
+				}
+				if(sl>0){g+='\n';}
+			}
+			if(tbB.value!==g){
+				tbB.removeEventListener('input',parseR);
+				tbB.value=g;
+				charStatus.textContent='# of Characters: '+(g.match(/(?:0x)?[0-9a-fA-F]{1,2}/g)||[]).length+'; # of lines: '+tbB.value.split('\n').length;
+				tbB.addEventListener('input',parseR,false);
+			}
+			if(tbT.value!==h){
+				tbT.removeEventListener('input',parse);
+				tbT.value=h;
+				tbT.addEventListener('input',parse,false);
+			}
+		},
+		parseR=function(){
+			var h=tbB.value.split('\n'),hb=h.length;
+			var cA=charArray,cV=cA.cmdLen,cVO=typeof cV==='function',u='',hl=h.length,i,il,b,p=0,m,s=0;
+			while(--hl>=0){
+				if(!(i=h.splice(0,1)[0])||i.length<2||i[0]==='#'){continue;}
+				il=(i=i.split(' ')).length;
+				while(--il>=0){
+					if(!(b=i.splice(0,1)[0])||b.search(/^(?:0x)?([0-9A-Fa-f]{1,2})$/)===-1|isNaN(b=parseInt(b,16))){continue;}
+					if(p!==0){
+						if(typeof cA[p][b]==='string'){
+							u+=cA[p][b];
+						}else if(cA[p][b] instanceof Array&&cA[p][b].length>1&&cA[p][b][1]!==false){
+							u+=cA[p][b][1];
+						}else{
+							u+=('{0x'+('0'+p.toString(16)).slice(-2)+'}{0x'+('0'+RegExp.$1.toUpperCase()).slice(-2)+'}');
+						}
+						p=0;
+						continue;
+					}else if(s>0){--s;
+						u+='{0x'+('0'+RegExp.$1.toUpperCase()).slice(-2)+'}';continue;
+					}else if(typeof (m=cA[b])==='string'){
+						u+=m;
+					}else if(m instanceof Array){
+						if(m.length>1&&m[1]!==false){u+=m[1];}else{u+='{0x'+('0'+RegExp.$1.toUpperCase()).slice(-2)+'}';}
+					}else if(typeof m==='object'){
+						p=b;
+						continue;
+					}else{u+='{0x'+('0'+RegExp.$1.toUpperCase()).slice(-2)+'}';}
+					if(cVO){s=cV(b,i);}
+				}s=0;
+				if(p!==0){u+='{0x'+('0'+p.toString(16).toUpperCase()).slice(-2)+'}';}
+				if(hl!==0){u+='\n';}
+			}
+			if(tbT.value!==u){
+				tbT.removeEventListener('input',parse);
+				tbT.value=u;
+				charStatus.textContent='# of Characters: '+(tbB.value.match(/(?:0x)?[0-9a-fA-F]{1,2}/g)||[]).length+'; # of lines: '+hb;
+				tbT.addEventListener('input',parse,false);
+			}
+		};
+	status.textContent='Init...';
+	/*Options*/
+	var e=document.createElement('label');e.textContent='Auto Update: ';document.body.appendChild(e);e=e.appendChild(document.createElement('input'));e.type='checkbox';e.checked=true;e.addEventListener('click',function(){if(auto=this.checked){tbT.addEventListener('input',parse,false);tbB.addEventListener('input',parseR,false);}else{tbT.removeEventListener('input',parse);tbB.removeEventListener('input',parseR);}},false);
+	document.body.appendChild(document.createTextNode('Use mapping for game version: '));e=document.createElement('select');document.body.appendChild(e);for(tbT in arrTypes){if(tbT!=='ಠ_ಠ'){e.appendChild(tbB=document.createElement('option'));if(arrTypes[tbT]===false){tbB.textContent='—————————————';tbB.disabled=true;continue;}tbB.textContent=tbT;if(arrTypes.ಠ_ಠ===tbT){tbB.selected=true;}}}e.addEventListener('change',function(){charArray=arrTypes[this.value];for(var i in charArrayR){delete charArrayR[i];}makeTbl();status.innerHTML='Changed to '+this.value+' mapping!<br />Change either textbox to update the other!';if(localStorage){localStorage.khst_lastActive=this.value;}},false);
+	//if(document.location.search.search(/[?&]advanced([=&]|$)/)!==-1){
+		e=document.body.appendChild(document.createElement('input'));e.type='button';e.setAttribute('data-opt','');e.value='{eol} beautifier';e.title='Add linebreaks after {eol}, to make it more readable\nUses "Normal Text" as a source!';e.addEventListener('click',function(){tbT.value=tbT.value.replace(/(\{eol\})(?!\n|$)/g,'$1\n');parse();},false);
+		e=document.body.appendChild(document.createElement('input'));e.type='button';e.setAttribute('data-opt','');e.value='Remove linebreaks';e.title='Remove all linebreaks (not {eol}, visual only)\nUses "Normal Text" as a source!';e.addEventListener('click',function(){tbT.value=tbT.value.replace(/\n/g,'');parse();},false);
+	//}
+	/*Textboxes*/
+	/*HTML5 error: wrap cannot be "off". But Firefox only turns wrapping off if it is "off"*/
+	tbT=document.createElement('textarea');tbT.placeholder='Normal Text';tbT.autofocus='';tbT.wrap='off';document.body.appendChild(tbT);document.body.appendChild(document.createElement('br'));tbT.addEventListener('input',parse,false);
+	tbB=document.createElement('textarea');tbB.placeholder='Encoded Bytes';tbB.wrap='off';document.body.appendChild(tbB);tbB.addEventListener('input',parseR,false);
+	/*Font tables*/
+	makeTbl();
+	status.textContent='Loaded!';
+	window.charArray=charArray;window.charArrayR=charArrayR;
+})();
+</script><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,'script','../../www.google-analytics.com/analytics.js','ga');ga('create','UA-48387617-1','x10host.com');ga('send','pageview');</script>
+</body>
+<!-- Mirrored from crazycatz00.x10host.com/KH/string_mapping by HTTrack Website Copier/3.x [XR&CO'2014], Tue, 15 Jul 2014 14:14:33 GMT -->
+</html>
